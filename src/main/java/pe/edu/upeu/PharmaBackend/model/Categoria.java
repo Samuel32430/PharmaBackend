@@ -29,6 +29,7 @@ public class Categoria {
     @PrePersist
     public void prePersist(){
         this.fechaCreacion = LocalDateTime.now();
+        this.fechaModificacion = LocalDateTime.now();
         if(estado==null){
             estado=true;
         }
