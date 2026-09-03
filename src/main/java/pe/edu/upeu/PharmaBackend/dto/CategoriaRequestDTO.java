@@ -14,7 +14,7 @@ public class CategoriaRequestDTO {
     @NotBlank(message = "El nombre de la categoria es obligatoria")
     @Size(min=3,max=50,message = "El nombre de la categoria debe tener entre 3 y 50 caracteres")
     private String nombre;
-    @Size(max=50,message = "La descripcion no debe superar los 200 caracteres")
+    @Size(max=200,message = "La descripcion no debe superar los 200 caracteres")
     private String descripcion;
     @NotNull(message = "El estado es obligatorio")
     private Boolean estado;

@@ -68,10 +68,7 @@ public class ProductoServiceImpl implements ProductoService {
             log.warn("Intento de actualizar producto con nombre vacío en ID: {}", aLong);
             throw new ReglaNegocioException("El nombre del producto no puede estar vacio");
         }
-        if (productoRepository.existsByNombreIgnoreCase(nombre)) {
-            log.warn("Intento de actualizar a un nombre de producto ya existente: {}", nombre);
-            throw new ReglaNegocioException("Ya existe un producto con el nombre " + nombre);
-        }
+
 
         Categoria categoria = catergoriaRepository.findById(t.getCategoriaId()).orElseThrow(() -> {
             log.error("Error al actualizar: No se encontró la categoría con ID {}", t.getCategoriaId());
@@ -111,6 +108,7 @@ public class ProductoServiceImpl implements ProductoService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void eliminar(Long aLong) {
         log.info("Iniciando eliminación de producto con ID: {}", aLong);
         Producto producto = productoRepository.findById(aLong).orElseThrow(() -> {

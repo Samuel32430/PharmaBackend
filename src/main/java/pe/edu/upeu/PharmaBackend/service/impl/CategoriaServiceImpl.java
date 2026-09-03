@@ -94,6 +94,7 @@ public class CategoriaServiceImpl implements CategoriaService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void eliminar(Long aLong) {
         log.info("Iniciando eliminación de la categoría con ID: {}", aLong);
         Categoria categoria = catergoriaRepository.findById(aLong).orElseThrow(() -> {
