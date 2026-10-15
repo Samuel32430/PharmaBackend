@@ -21,3 +21,9 @@ springdoc:
   api-docs:
     enabled: true
 
+# JWT en desarrollo. El secreto es una clave Base64 de 48 bytes (384 bits).
+# Es SOLO para clase: en produccion llega por variable de entorno.
+app:
+  jwt:
+    secret: w9Z6dP/dzykNH/uiI3Z/KGjBlP0H4Ji+Tuq4fm2cTNuLD4jWafu1gBL74V2SJEvy
+    expiracion-minutos: 60

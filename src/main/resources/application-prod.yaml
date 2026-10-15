@@ -21,3 +21,10 @@ springdoc:
     path: false
   api-docs:
     enabled: false
+
+# En produccion el secreto NUNCA se escribe en el repositorio:
+# llega por variable de entorno (minimo 32 bytes en Base64).
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+    expiracion-minutos: ${JWT_EXPIRACION_MINUTOS:30}
