@@ -16,7 +16,7 @@ import java.util.List;
 public interface VentaRepository extends JpaRepository<Venta, Long> {
     @Query(
             """
-            SELECT distinct v FROM Venta v
+                SELECT distinct v FROM Venta v
             LEFT JOIN FETCH v.cliente c
             LEFT JOIN FETCH v.detalles d
             LEFT JOIN FETCH d.producto p

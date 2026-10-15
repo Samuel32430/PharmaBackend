@@ -1,11 +1,11 @@
 package pe.edu.upeu.PharmaBackend.service.impl;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.edu.upeu.PharmaBackend.dto.DetalleVentaRequestDTO;
 import pe.edu.upeu.PharmaBackend.dto.DetalleVentaResponseDTO;
+import pe.edu.upeu.PharmaBackend.dto.PaginaResponseDTO;
 import pe.edu.upeu.PharmaBackend.dto.VentaRequestDTO;
 import pe.edu.upeu.PharmaBackend.dto.VentaResponseDTO;
 import pe.edu.upeu.PharmaBackend.model.Cliente;
@@ -65,7 +65,7 @@ public class VentaServiceImpl implements VentaService {
 
         for (DetalleVentaRequestDTO item: request.getDetalles()) {
             Producto producto = productoRepository.findById(item.getProductoId()).orElseThrow(() ->
-                    new RecursoNoEncontradoException("Producto no encontrado con id: "+ item.getProductoId()));
+                    new RecursoNoEncontradoException("Producto no encontrado con id: "+ item.getProductoId()) );
 
             if (!Boolean.TRUE.equals(producto.getEstado())) {
                 throw new ReglaNegocioException("El producto "+ producto.getNombre()+ " se encuentra inactivo");
@@ -122,30 +122,29 @@ public class VentaServiceImpl implements VentaService {
                 new RecursoNoEncontradoException("Venta no encontrada con id: "+id)
         );
         if(venta.getEstado() == EstadoVenta.ANULADA){
-            throw new ReglaNegocioException("La venta ya se encuentra anualada");
+            throw new ReglaNegocioException("La venta ya se encuentra anulada");
         }
         venta.setEstado(EstadoVenta.ANULADA);
         return convertirResponse(venta);
    }
 
-
-
-
     @Override
     @Transactional(readOnly = true)
-    public List<VentaResponseDTO> buscarVentas(
+    public PaginaResponseDTO<VentaResponseDTO> buscarVentas(
             Long clienteId,
             EstadoVenta estado,
             LocalDate desde,
             LocalDate hasta,
             String ordenarPor,
-            String direccion) {
+            String direccion,
+            int pagina,
+            int tamanio) {
 
         long inicio = System.currentTimeMillis();
 
         log.info("Inicio buscar ventas | clienteId={} | estado={} | "
-                        + "desde={} | hasta={} | ordenarPor={} | direccion={}",
-                clienteId, estado, desde, hasta, ordenarPor, direccion);
+                        + "desde={} | hasta={} | ordenarPor={} | direccion={} | pagina={} | tamanio={}",
+                clienteId, estado, desde, hasta, ordenarPor, direccion, pagina, tamanio);
 
         if (desde != null
                 && hasta != null
@@ -175,14 +174,30 @@ public class VentaServiceImpl implements VentaService {
                         .map(this::convertirResponse)
                         .toList();
 
+        int totalElementos = resultado.size();
+        int tam = Math.max(tamanio, 1);
+        int totalPaginas = (int) Math.ceil((double) totalElementos / tam);
+        int p = Math.max(pagina, 0);
+        int start = Math.min(p * tam, totalElementos);
+        int end = Math.min(start + tam, totalElementos);
+        List<VentaResponseDTO> contenido = resultado.subList(start, end);
+        boolean ultima = (p >= totalPaginas - 1) || totalPaginas == 0;
+
         log.info("Fin buscar ventas | clienteId={} | estado={} | "
                         + "desde={} | hasta={} | orden={} {} | "
-                        + "filas={} | duracionMs={}",
+                        + "filas={} | pagina={} | totalPaginas={} | duracionMs={}",
                 clienteId, estado, desde, hasta, ordenarPor, direccion,
-                resultado.size(),
+                totalElementos, p, totalPaginas,
                 System.currentTimeMillis() - inicio);
 
-        return resultado;
+        return new PaginaResponseDTO<>(
+                contenido,
+                p,
+                tam,
+                totalElementos,
+                totalPaginas,
+                ultima
+        );
     }
     private VentaResponseDTO convertirResponse(Venta venta) {
 

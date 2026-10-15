@@ -7,6 +7,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import pe.edu.upeu.PharmaBackend.exception.dto.ErrorResponseDTO;
 
 import java.time.LocalDateTime;
@@ -92,6 +93,30 @@ public class GlobalExceptionHandler {
                 "Existen errores de validación",
                 request.getRequestURI(),
                 validationErrors
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(error);
+    }
+
+
+    /*
+     * Parámetro con tipo o formato inválido (ej. fecha mal formada en query param)
+     * HTTP 400
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponseDTO> handleTypeMismatch(
+           MethodArgumentTypeMismatchException ex,
+            HttpServletRequest request) {
+
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                "El parámetro '" + ex.getName() + "' tiene un formato inválido: '" + ex.getValue() + "'",
+                request.getRequestURI(),
+                null
         );
 
         return ResponseEntity

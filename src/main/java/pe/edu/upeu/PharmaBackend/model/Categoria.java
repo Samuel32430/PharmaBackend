@@ -22,7 +22,7 @@ public class Categoria {
     private String  descripcion;
     @Column(nullable = false)
     private Boolean estado;
-    @Column(nullable = false, updatable = false, name = "fecha_creacion")
+    @Column(nullable = false, updatable = false)
     private LocalDateTime fechaCreacion;
     @Column(nullable = false, name = "fecha_modificacion")
     private LocalDateTime fechaModificacion;
