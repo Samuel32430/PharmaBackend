@@ -12,6 +12,12 @@ import pe.edu.upeu.PharmaBackend.exception.ReglaNegocioException;
 import pe.edu.upeu.PharmaBackend.repository.ClienteRepository;
 import pe.edu.upeu.PharmaBackend.service.service.ClienteService;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import pe.edu.upeu.PharmaBackend.dto.PaginaResponseDTO;
+
 import java.util.List;
 
 @Service
@@ -201,6 +207,54 @@ public class ClienteServiceImpl
                 "Cliente id={} eliminado correctamente",
                 id
         );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaginaResponseDTO<ClienteResponseDTO> listarPaginado(int pagina, int tamanio, String ordenarPor, String direccion) {
+        log.info("Listando clientes paginado: pagina={}, tamanio={}, ordenarPor={}, direccion={}",
+                pagina, tamanio, ordenarPor, direccion);
+
+        List<String> permitidos = List.of("id", "dni", "nombres", "apellidos", "email");
+        String campoOrden = (ordenarPor != null && !ordenarPor.isBlank()) ? ordenarPor.trim().toLowerCase() : "apellidos";
+
+        if (!permitidos.contains(campoOrden)) {
+            throw new ReglaNegocioException("El campo de ordenación no es válido: " + ordenarPor);
+        }
+
+        Sort.Direction dir = "desc".equalsIgnoreCase(direccion) ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Pageable pageable = PageRequest.of(Math.max(pagina, 0), Math.max(tamanio, 1), Sort.by(dir, campoOrden));
+        Page<Cliente> page = clienteRepository.findAll(pageable);
+
+        List<ClienteResponseDTO> contenido = page.getContent()
+                .stream()
+                .map(this::convertirResponse)
+                .toList();
+
+        return new PaginaResponseDTO<>(
+                contenido,
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.isLast()
+        );
+    }
+
+    @Override
+    @Transactional
+    public void darDeBaja(Long id) {
+        log.info("Dando de baja lógica al cliente id={}", id);
+        Cliente cliente = clienteRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Cliente no encontrado con id: " + id));
+
+        if (Boolean.FALSE.equals(cliente.getEstado())) {
+            throw new ReglaNegocioException("El cliente con id " + id + " ya se encuentra inactivo");
+        }
+
+        cliente.setEstado(false);
+        clienteRepository.save(cliente);
+        log.info("Cliente id={} dado de baja exitosamente", id);
     }
 
     private ClienteResponseDTO convertirResponse(

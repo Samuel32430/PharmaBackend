@@ -22,8 +22,8 @@ public class Cliente {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 8)
-    private String dni;
+        @Column(nullable = false, length = 8)
+        private String dni;
 
     @Column(nullable = false, length = 100)
     private String nombres;
@@ -46,7 +46,7 @@ public class Cliente {
     @Column(name = "fecha_creacion", nullable = false, updatable = false)
     private LocalDateTime fechaCreacion;
 
-    @Column(name = "fecha_modificación")
+    @Column(name = "fecha_modificacion")
     private LocalDateTime fechaModificacion;
 
     @PrePersist

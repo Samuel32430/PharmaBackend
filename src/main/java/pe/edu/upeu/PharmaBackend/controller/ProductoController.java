@@ -4,14 +4,14 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pe.edu.upeu.PharmaBackend.dto.PaginaResponseDTO;
 import pe.edu.upeu.PharmaBackend.dto.ProductoRequestDTO;
 import pe.edu.upeu.PharmaBackend.dto.ProductoResponseDTO;
 import pe.edu.upeu.PharmaBackend.service.service.ProductoService;
 
-import java.util.List;
 
 @RestController
-@RequestMapping("/api/productos")
+@RequestMapping({"/api/productos", "/api/v1/productos"})
 public class ProductoController {
     private final ProductoService productoService;
 
@@ -20,9 +20,13 @@ public class ProductoController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ProductoResponseDTO>> findAll(){
+    public ResponseEntity<PaginaResponseDTO<ProductoResponseDTO>> listar(
+            @RequestParam(defaultValue = "0") int pagina,
+            @RequestParam(defaultValue = "10") int tamanio,
+            @RequestParam(defaultValue = "nombre") String ordenarPor,
+            @RequestParam(defaultValue = "asc") String direccion){
         return ResponseEntity.ok(
-                productoService.listar()
+                productoService.listarPaginado(pagina, tamanio, ordenarPor, direccion)
         );
     }
 
@@ -44,8 +48,8 @@ public class ProductoController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id){
-        productoService.eliminar(id);
+    public ResponseEntity<Void> darDeBaja(@PathVariable Long id){
+        productoService.darDeBaja(id);
         return ResponseEntity.noContent().build();
     }
 }

@@ -12,7 +12,7 @@ import pe.edu.upeu.PharmaBackend.service.service.CategoriaService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/categorias")
+@RequestMapping({"/api/categorias", "/api/v1/categorias"})
 public class CategoriaController {
     private final CategoriaService categoriaService;
 

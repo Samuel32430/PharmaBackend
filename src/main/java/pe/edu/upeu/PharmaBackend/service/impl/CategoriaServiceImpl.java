@@ -10,6 +10,7 @@ import pe.edu.upeu.PharmaBackend.exception.RecursoNoEncontradoException;
 import pe.edu.upeu.PharmaBackend.exception.ReglaNegocioException;
 import pe.edu.upeu.PharmaBackend.model.Categoria;
 import pe.edu.upeu.PharmaBackend.repository.CatergoriaRepository;
+import pe.edu.upeu.PharmaBackend.repository.ProductoRepository;
 import pe.edu.upeu.PharmaBackend.service.service.CategoriaService;
 
 import java.util.List;
@@ -20,6 +21,7 @@ import java.util.List;
 public class CategoriaServiceImpl implements CategoriaService {
 
     private final CatergoriaRepository catergoriaRepository;
+    private final ProductoRepository productoRepository;
 
     @Override
     @Transactional
@@ -32,7 +34,7 @@ public class CategoriaServiceImpl implements CategoriaService {
         }
         if (catergoriaRepository.existsByNombreIgnoreCase(nombre)) {
             log.warn("Intento de registrar categoría duplicada: {}", nombre);
-            throw new ReglaNegocioException("Ya existe una categoria con el nombre " + nombre);
+                throw new ReglaNegocioException("Ya existe una categoria con el nombre " + nombre);
         }
         Categoria categoria = new Categoria();
         categoria.setNombre(nombre);
@@ -94,13 +96,19 @@ public class CategoriaServiceImpl implements CategoriaService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public void eliminar(Long aLong) {
         log.info("Iniciando eliminación de la categoría con ID: {}", aLong);
         Categoria categoria = catergoriaRepository.findById(aLong).orElseThrow(() -> {
             log.error("Error al eliminar: Categoría no encontrada con ID {}", aLong);
             return new RecursoNoEncontradoException("Categoria no encontrada con id: " + aLong);
         });
+
+        if (productoRepository.existsByCategoriaId(aLong)) {
+            log.warn("No se puede eliminar la categoría con ID {} porque tiene productos asociados", aLong);
+            throw new ReglaNegocioException("No se puede eliminar la categoría porque tiene productos asociados");
+        }
+
         catergoriaRepository.delete(categoria);
         log.info("Categoría con ID {} eliminada exitosamente", aLong);
     }
