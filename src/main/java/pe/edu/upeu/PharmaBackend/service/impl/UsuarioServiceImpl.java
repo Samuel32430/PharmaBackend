@@ -6,6 +6,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pe.edu.upeu.PharmaBackend.dto.auth.AsignarRolesRequestDTO;
 import pe.edu.upeu.PharmaBackend.dto.auth.EmpleadoResponseDTO;
 import pe.edu.upeu.PharmaBackend.dto.auth.RolResponseDTO;
 import pe.edu.upeu.PharmaBackend.dto.auth.UsuarioRequestDTO;
@@ -144,5 +145,73 @@ public class UsuarioServiceImpl implements UsuarioService {
                 .stream()
                 .map(usuarioMapper::toRolResponse)
                 .toList();
+    }
+
+    /*
+     * B2. Asignar roles a un usuario. Solo ADMIN.
+     * Reemplaza el conjunto de roles del usuario (relación muchos a muchos).
+     *
+     * - Usuario inexistente o algún rol inexistente -> 404.
+     * - Un ADMIN no puede quitarse a sí mismo el rol ADMIN -> 409.
+     * - Basta con usuario.setRoles(new HashSet<>(roles)): JPA actualiza las filas de usuario_roles.
+     */
+    @Override
+    @Transactional
+    public UsuarioResponseDTO asignarRoles(Long id, AsignarRolesRequestDTO request, String authUsername) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "Usuario no encontrado con id: " + id));
+
+        List<Rol> roles = rolRepository.findAllById(request.getRolIds());
+        if (roles.size() != request.getRolIds().size()) {
+            Set<Long> encontrados = roles.stream().map(Rol::getId).collect(Collectors.toSet());
+            Set<Long> faltantes = new HashSet<>(request.getRolIds());
+            faltantes.removeAll(encontrados);
+            throw new RecursoNoEncontradoException("Roles no encontrados: " + faltantes);
+        }
+
+        // Si el usuario a modificar es el mismo admin autenticado, no puede despojarse del rol ADMIN
+        if (usuario.getUsername().equalsIgnoreCase(authUsername)) {
+            boolean conservaAdmin = roles.stream()
+                    .anyMatch(r -> "ADMIN".equalsIgnoreCase(r.getNombre()));
+            if (!conservaAdmin) {
+                throw new ReglaNegocioException("Un administrador no puede retirarse a sí mismo el rol ADMIN");
+            }
+        }
+
+        usuario.setRoles(new HashSet<>(roles));
+        Usuario actualizado = usuarioRepository.save(usuario);
+
+        log.info("Roles actualizados para usuario={} roles={}",
+                usuario.getUsername(), usuarioMapper.nombresRoles(roles));
+
+        return usuarioMapper.toUsuarioResponse(actualizado);
+    }
+
+    /*
+     * B3. Activar o desactivar usuarios. Solo ADMIN (permiso USUARIOS_ADMINISTRAR).
+     *
+     * - Usuario inexistente -> 404.
+     * - Un ADMIN no puede desactivarse a sí mismo -> 409.
+     * - El token del usuario desactivado deja de servir en su siguiente petición (401).
+     */
+    @Override
+    @Transactional
+    public UsuarioResponseDTO cambiarEstado(Long id, Boolean estado, String authUsername) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "Usuario no encontrado con id: " + id));
+
+        if (usuario.getUsername().equalsIgnoreCase(authUsername) && Boolean.FALSE.equals(estado)) {
+            throw new ReglaNegocioException("Un administrador no puede desactivar su propia cuenta");
+        }
+
+        usuario.setEstado(estado);
+        Usuario actualizado = usuarioRepository.save(usuario);
+
+        log.info("Estado actualizado para usuario={} estado={}",
+                usuario.getUsername(), estado);
+
+        return usuarioMapper.toUsuarioResponse(actualizado);
     }
 }
