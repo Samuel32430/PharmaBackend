@@ -3,11 +3,17 @@ package pe.edu.upeu.PharmaBackend.controller;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import pe.edu.upeu.PharmaBackend.dto.auth.AsignarRolesRequestDTO;
+import pe.edu.upeu.PharmaBackend.dto.auth.CambioEstadoUsuarioRequestDTO;
 import pe.edu.upeu.PharmaBackend.dto.auth.EmpleadoResponseDTO;
 import pe.edu.upeu.PharmaBackend.dto.auth.RolResponseDTO;
 import pe.edu.upeu.PharmaBackend.dto.auth.UsuarioRequestDTO;
@@ -42,6 +48,32 @@ public class UsuarioController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(usuarioService.crear(request));
+    }
+
+    /*
+     * B2. Asignar roles a un usuario (relación muchos a muchos).
+     * Solo ADMIN (USUARIOS_ADMINISTRAR).
+     */
+    @PutMapping("/usuarios/{id}/roles")
+    public ResponseEntity<UsuarioResponseDTO> asignarRoles(
+            @PathVariable Long id,
+            @Valid @RequestBody AsignarRolesRequestDTO request,
+            Authentication authentication) {
+        return ResponseEntity.ok(
+                usuarioService.asignarRoles(id, request, authentication.getName()));
+    }
+
+    /*
+     * B3. Activar o desactivar usuarios.
+     * Solo ADMIN (USUARIOS_ADMINISTRAR).
+     */
+    @PatchMapping("/usuarios/{id}/estado")
+    public ResponseEntity<UsuarioResponseDTO> cambiarEstado(
+            @PathVariable Long id,
+            @Valid @RequestBody CambioEstadoUsuarioRequestDTO request,
+            Authentication authentication) {
+        return ResponseEntity.ok(
+                usuarioService.cambiarEstado(id, request.getEstado(), authentication.getName()));
     }
 
     /* Empleados, indicando cuales ya tienen usuario (relacion 1 a 1). */

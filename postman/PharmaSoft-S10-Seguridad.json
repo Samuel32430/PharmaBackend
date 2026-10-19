@@ -1,0 +1,1189 @@
+{
+	"info": {
+		"_postman_id": "c1f7b0e1-482a-4a25-9c56-f0891a27e384",
+		"name": "PharmaSoft - S10 Seguridad",
+		"description": "Colección completa de pruebas de seguridad, autenticación JWT, control de accesos RBAC y gestión de usuarios para PharmaBackend - Sesión 10.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "01. Autenticacion",
+			"item": [
+				{
+					"name": "A-01a Login Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"var jsonData = pm.response.json();",
+									"if (jsonData.token) {",
+									"    pm.collectionVariables.set(\"tokenAdmin\", jsonData.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"admin\",\n    \"password\": \"Admin2026*\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					}
+				},
+				{
+					"name": "A-01b Login Vendedor",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"var jsonData = pm.response.json();",
+									"if (jsonData.token) {",
+									"    pm.collectionVariables.set(\"tokenVendedor\", jsonData.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"vendedor\",\n    \"password\": \"Vendedor2026*\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					}
+				},
+				{
+					"name": "A-01c Login Almacen",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"var jsonData = pm.response.json();",
+									"if (jsonData.token) {",
+									"    pm.collectionVariables.set(\"tokenAlmacen\", jsonData.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"almacen\",\n    \"password\": \"Almacen2026*\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					}
+				},
+				{
+					"name": "A-01d Login Supervisor",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"var jsonData = pm.response.json();",
+									"if (jsonData.token) {",
+									"    pm.collectionVariables.set(\"tokenSupervisor\", jsonData.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"supervisor\",\n    \"password\": \"Supervisor2026*\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					}
+				},
+				{
+					"name": "A-02a Login Inexistente",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"usuario_que_no_existe\",\n    \"password\": \"Cualquiera123*\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					}
+				},
+				{
+					"name": "A-02b Login Password Incorrecta",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"admin\",\n    \"password\": \"ClaveIncorrecta123*\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					}
+				},
+				{
+					"name": "A-03 Login Inactivo",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"inactivo\",\n    \"password\": \"Inactivo2026*\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					}
+				},
+				{
+					"name": "A-04 Login Mayusculas",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"VENDEDOR\",\n    \"password\": \"Vendedor2026*\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					}
+				},
+				{
+					"name": "A-05 Login Campos Vacios (Propio)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"\",\n    \"password\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "02. Tokens JWT",
+			"item": [
+				{
+					"name": "T-01 Token sin prefijo Bearer",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{tokenVendedor}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/productos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"productos"
+							]
+						}
+					}
+				},
+				{
+					"name": "T-02 Token alterado en payload",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJhdGFjYW50ZSIsImV4cCI6OTk5OTk5OTk5OX0.FALSIFICADA"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/productos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"productos"
+							]
+						}
+					}
+				},
+				{
+					"name": "T-03 Token con otra firma secreta",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ2ZW5kZWRvciIsImF1dGhvcml0aWVzIjpbIlJPTEVfVkVOREVET1IiXX0.FIRMA_INVALIDA_OTRO_SECRETO"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/productos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"productos"
+							]
+						}
+					}
+				},
+				{
+					"name": "T-04 Token expirado",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ2ZW5kZWRvciIsImlhdCI6MTYwMDAwMDAwMCwiZXhwIjoxNjAwMDAwMTAwfQ.FIRMA_EXPIRADA"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/productos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"productos"
+							]
+						}
+					}
+				},
+				{
+					"name": "T-05 Consultar /me usuario actual",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{tokenVendedor}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/auth/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"me"
+							]
+						}
+					}
+				},
+				{
+					"name": "T-06 Peticion protegida sin cabecera Authorization (Propio)",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/ventas",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"ventas"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "03. Permisos y Roles",
+			"item": [
+				{
+					"name": "P-01a Vendedor intenta POST Categorias (403)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{tokenVendedor}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nombre\": \"Nueva Categoria Prohibida\",\n    \"descripcion\": \"Sin permisos\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/categorias",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"categorias"
+							]
+						}
+					}
+				},
+				{
+					"name": "P-01b Vendedor intenta PUT Categorias (403)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{tokenVendedor}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nombre\": \"Modificacion Ilegal\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/categorias/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"categorias",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "P-01c Vendedor intenta DELETE Categorias (403)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{tokenVendedor}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/categorias/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"categorias",
+								"1"
+							]
+						}
+					}
+				},
+				{
+					"name": "P-02a Almacenero intenta GET Clientes (403)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{tokenAlmacen}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/clientes",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"clientes"
+							]
+						}
+					}
+				},
+				{
+					"name": "P-02b Almacenero intenta POST Ventas (403)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{tokenAlmacen}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"clienteId\": 1,\n    \"formaPago\": \"EFECTIVO\",\n    \"detalles\": [\n        {\"productoId\": 1, \"cantidad\": 1, \"precioUnitario\": 10.0}\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/ventas",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"ventas"
+							]
+						}
+					}
+				},
+				{
+					"name": "P-03 Vendedor intenta GET Reporte Productos Mas Vendidos (403)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{tokenVendedor}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/reportes/productos-mas-vendidos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"reportes",
+								"productos-mas-vendidos"
+							]
+						}
+					}
+				},
+				{
+					"name": "P-04 Admin consulta Categorias (200)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{tokenAdmin}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/categorias",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"categorias"
+							]
+						}
+					}
+				},
+				{
+					"name": "P-05 Vendedor intenta POST Usuarios (403 Propio)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{tokenVendedor}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"intruso\",\n    \"password\": \"Intruso2026*\",\n    \"empleadoId\": 2,\n    \"rolIds\": [1]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/usuarios",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"usuarios"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "04. Usuarios y Catalogo",
+			"item": [
+				{
+					"name": "U-01a Admin crea usuario con clave sin numeros (400)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{tokenAdmin}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"usuario_invalido\",\n    \"password\": \"abcdefgh\",\n    \"empleadoId\": 5,\n    \"rolIds\": [2]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/usuarios",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"usuarios"
+							]
+						}
+					}
+				},
+				{
+					"name": "U-01b Admin crea usuario con rolIds vacio (400)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{tokenAdmin}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"usuario_sin_roles\",\n    \"password\": \"ClaveValida2026*\",\n    \"empleadoId\": 5,\n    \"rolIds\": []\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/usuarios",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"usuarios"
+							]
+						}
+					}
+				},
+				{
+					"name": "U-02a Admin crea usuario para empleado que ya tiene cuenta (409)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{tokenAdmin}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"admin2\",\n    \"password\": \"AdminDuplicado2026*\",\n    \"empleadoId\": 1,\n    \"rolIds\": [1]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/usuarios",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"usuarios"
+							]
+						}
+					}
+				},
+				{
+					"name": "U-02b Admin crea usuario para Maria Huaman (201)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{tokenAdmin}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"mhuaman\",\n    \"password\": \"Cajera2026*\",\n    \"empleadoId\": 6,\n    \"rolIds\": [2]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/usuarios",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"usuarios"
+							]
+						}
+					}
+				},
+				{
+					"name": "U-03 Admin crea usuario clave > 72 bytes (409 Propio)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{tokenAdmin}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"super_larga\",\n    \"password\": \"ClaveExtremadamenteLargaQueSuperaConMuchisimaFacilidadLosSetentaYDosBytes2026*\",\n    \"empleadoId\": 7,\n    \"rolIds\": [2]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/usuarios",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"usuarios"
+							]
+						}
+					}
+				},
+				{
+					"name": "C-01 Preflight OPTIONS /productos (200)",
+					"request": {
+						"method": "OPTIONS",
+						"header": [
+							{
+								"key": "Origin",
+								"value": "http://localhost:4200"
+							},
+							{
+								"key": "Access-Control-Request-Method",
+								"value": "GET"
+							},
+							{
+								"key": "Access-Control-Request-Headers",
+								"value": "authorization"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/productos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"productos"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "05. Nuevas Funcionalidades (B-01 a B-08)",
+			"item": [
+				{
+					"name": "B-01 Cambio de contraseña exitoso (204)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{tokenVendedor}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"passwordActual\": \"Vendedor2026*\",\n    \"passwordNueva\": \"NuevaClave2026*\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"password"
+							]
+						}
+					}
+				},
+				{
+					"name": "B-02 Cambio de contraseña clave actual incorrecta (409)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{tokenVendedor}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"passwordActual\": \"ClaveTotalmenteErronea2026*\",\n    \"passwordNueva\": \"OtraClave2026*\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"password"
+							]
+						}
+					}
+				},
+				{
+					"name": "B-03 Cambio de contraseña clave nueva igual a actual (409)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{tokenVendedor}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"passwordActual\": \"Vendedor2026*\",\n    \"passwordNueva\": \"Vendedor2026*\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"password"
+							]
+						}
+					}
+				},
+				{
+					"name": "B-04 Cambio de contraseña clave nueva debil o corta (400)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{tokenVendedor}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"passwordActual\": \"Vendedor2026*\",\n    \"passwordNueva\": \"corta1\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"password"
+							]
+						}
+					}
+				},
+				{
+					"name": "B-05 Admin asigna roles [2, 3] a usuario (200)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{tokenAdmin}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"rolIds\": [2, 3]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/usuarios/2/roles",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"usuarios",
+								"2",
+								"roles"
+							]
+						}
+					}
+				},
+				{
+					"name": "B-06a Admin asigna roles lista vacia (400)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{tokenAdmin}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"rolIds\": []\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/usuarios/2/roles",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"usuarios",
+								"2",
+								"roles"
+							]
+						}
+					}
+				},
+				{
+					"name": "B-06b Admin asigna roles con rol inexistente (404)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{tokenAdmin}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"rolIds\": [2, 99]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/usuarios/2/roles",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"usuarios",
+								"2",
+								"roles"
+							]
+						}
+					}
+				},
+				{
+					"name": "B-07 Admin intenta quitarse rol ADMIN a si mismo (409)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{tokenAdmin}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"rolIds\": [2]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/usuarios/1/roles",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"usuarios",
+								"1",
+								"roles"
+							]
+						}
+					}
+				},
+				{
+					"name": "B-08a Admin desactiva usuario vendedor (200)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{tokenAdmin}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"estado\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/usuarios/2/estado",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"usuarios",
+								"2",
+								"estado"
+							]
+						}
+					}
+				},
+				{
+					"name": "B-08b Token de usuario desactivado es rechazado (401)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{tokenVendedor}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/productos",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"productos"
+							]
+						}
+					}
+				},
+				{
+					"name": "B-08c Admin intenta desactivar su propia cuenta (409)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{tokenAdmin}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"estado\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/usuarios/1/estado",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"usuarios",
+								"1",
+								"estado"
+							]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "tokenAdmin",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "tokenVendedor",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "tokenAlmacen",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "tokenSupervisor",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
