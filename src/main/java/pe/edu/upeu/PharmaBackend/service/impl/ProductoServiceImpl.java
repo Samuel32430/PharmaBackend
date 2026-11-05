@@ -2,8 +2,15 @@ package pe.edu.upeu.PharmaBackend.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pe.edu.upeu.PharmaBackend.dto.PaginaResponseDTO;
 import pe.edu.upeu.PharmaBackend.dto.ProductoRequestDTO;
 import pe.edu.upeu.PharmaBackend.dto.ProductoResponseDTO;
 import pe.edu.upeu.PharmaBackend.exception.RecursoNoEncontradoException;
@@ -14,23 +21,18 @@ import pe.edu.upeu.PharmaBackend.repository.CatergoriaRepository;
 import pe.edu.upeu.PharmaBackend.repository.ProductoRepository;
 import pe.edu.upeu.PharmaBackend.service.service.ProductoService;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import pe.edu.upeu.PharmaBackend.dto.PaginaResponseDTO;
-
 import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class    ProductoServiceImpl implements ProductoService {
+public class ProductoServiceImpl implements ProductoService {
     private final ProductoRepository productoRepository;
     private final CatergoriaRepository catergoriaRepository;
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "productos", allEntries = true)
     public ProductoResponseDTO guardar(ProductoRequestDTO t) {
         log.info("Iniciando registro de nuevo producto: {}", t.getNombre());
         String nombre = t.getNombre().trim();
@@ -62,6 +64,7 @@ public class    ProductoServiceImpl implements ProductoService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "productos", allEntries = true)
     public ProductoResponseDTO actualizar(Long aLong, ProductoRequestDTO t) {
         log.info("Iniciando actualización del producto con ID: {}", aLong);
         Producto producto = productoRepository.findById(aLong).orElseThrow(() -> {
@@ -78,7 +81,6 @@ public class    ProductoServiceImpl implements ProductoService {
             log.warn("Intento de actualizar con nombre duplicado: {}", nombre);
             throw new ReglaNegocioException("Ya existe un producto con el nombre " + nombre);
         }
-
 
         Categoria categoria = catergoriaRepository.findById(t.getCategoriaId()).orElseThrow(() -> {
             log.error("Error al actualizar: No se encontró la categoría con ID {}", t.getCategoriaId());
@@ -98,6 +100,7 @@ public class    ProductoServiceImpl implements ProductoService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = "productos", key = "'id-' + #aLong")
     public ProductoResponseDTO buscarPorId(Long aLong) {
         log.info("Buscando producto con ID: {}", aLong);
         Producto producto = productoRepository.findById(aLong).orElseThrow(() -> {
@@ -118,7 +121,8 @@ public class    ProductoServiceImpl implements ProductoService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
+    @CacheEvict(cacheNames = "productos", allEntries = true)
     public void eliminar(Long aLong) {
         log.info("Iniciando eliminación de producto con ID: {}", aLong);
         Producto producto = productoRepository.findById(aLong).orElseThrow(() -> {
@@ -131,6 +135,8 @@ public class    ProductoServiceImpl implements ProductoService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = "productos",
+            key = "#pagina + '-' + #tamanio + '-' + #ordenarPor + '-' + #direccion")
     public PaginaResponseDTO<ProductoResponseDTO> listarPaginado(int pagina, int tamanio, String ordenarPor, String direccion) {
         log.info("Listando productos paginado: pagina={}, tamanio={}, ordenarPor={}, direccion={}",
                 pagina, tamanio, ordenarPor, direccion);
@@ -163,6 +169,7 @@ public class    ProductoServiceImpl implements ProductoService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "productos", allEntries = true)
     public void darDeBaja(Long id) {
         log.info("Dando de baja lógica al producto id={}", id);
         Producto producto = productoRepository.findById(id)

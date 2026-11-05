@@ -2,6 +2,7 @@ package pe.edu.upeu.PharmaBackend.service.impl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.transaction.annotation.Transactional;
 import pe.edu.upeu.PharmaBackend.dto.DetalleVentaRequestDTO;
 import pe.edu.upeu.PharmaBackend.dto.DetalleVentaResponseDTO;
@@ -48,6 +49,7 @@ public class VentaServiceImpl implements VentaService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = "productos", allEntries = true)
     public VentaResponseDTO registrar(VentaRequestDTO request) {
         Cliente cliente = clienteRepository.findById(request.getClienteId())
                 .orElseThrow(() ->new RecursoNoEncontradoException("Cliente no encontrado con id: "+ request.getClienteId()));
@@ -117,6 +119,7 @@ public class VentaServiceImpl implements VentaService {
 
    @Override
    @Transactional
+   @CacheEvict(cacheNames = "productos", allEntries = true)
    public VentaResponseDTO anular(Long id){
         Venta venta = ventaRepository.findById(id).orElseThrow(() ->
                 new RecursoNoEncontradoException("Venta no encontrada con id: "+id)
