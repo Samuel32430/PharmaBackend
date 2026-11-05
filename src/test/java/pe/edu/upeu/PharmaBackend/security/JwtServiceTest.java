@@ -42,7 +42,7 @@ class JwtServiceTest {
         assertThat(claims.getSubject()).isEqualTo("vendedor");
         assertThat(claims.getExpiration()).isAfter(claims.getIssuedAt());
 
-        List<?> authorities = claims.get("authorities", List.class);
+        List<String> authorities = (List<String>) claims.get("authorities", List.class);
         assertThat(authorities)
                 .contains("ROLE_VENDEDOR", "VENTAS_REGISTRAR")
                 .doesNotContain("REPORTES_VER");
