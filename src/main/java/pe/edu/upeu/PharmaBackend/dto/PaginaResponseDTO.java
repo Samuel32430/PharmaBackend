@@ -1,8 +1,11 @@
 package pe.edu.upeu.PharmaBackend.dto;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class PaginaResponseDTO<T> {
+public class PaginaResponseDTO<T> implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private List<T> contenido;
     private int pagina;
     private int tamanio;
@@ -10,6 +13,7 @@ public class PaginaResponseDTO<T> {
     private int totalPaginas;
     private boolean ultima;
 
+    public PaginaResponseDTO() {}
 
     public PaginaResponseDTO(List<T> contenido, int pagina, int tamanio, long totalElementos, int totalPaginas, boolean ultima) {
         this.contenido = contenido;
