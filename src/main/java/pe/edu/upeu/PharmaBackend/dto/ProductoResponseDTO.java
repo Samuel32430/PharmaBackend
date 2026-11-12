@@ -4,16 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class ProductoResponseDTO implements Serializable {
-    private static final long serialVersionUID = 1L;
-
+public class ProductoResponseDTO {
     private Long id;
     private String nombre;
     private BigDecimal precio;
@@ -23,4 +20,6 @@ public class ProductoResponseDTO implements Serializable {
     private LocalDateTime fechaModificacion;
     private Long categoriaId;
     private String categoriaNombre;
+    private String creadoPor;
+    private String modificadoPor;
 }

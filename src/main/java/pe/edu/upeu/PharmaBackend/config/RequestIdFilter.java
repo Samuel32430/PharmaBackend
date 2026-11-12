@@ -6,40 +6,42 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.UUID;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+/**
+ * Asigna un identificador de petición en el MDC de logging y en el header X-Request-Id
+ * para correlacionar logs HTTP con eventos de auditoría.
+ */
 @Component
-@Order(Ordered.HIGHEST_PRECEDENCE) // antes que Spring Security
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class RequestIdFilter extends OncePerRequestFilter {
-    private static final Logger log =
-            LoggerFactory.getLogger(RequestIdFilter.class);
-    public static final String CABECERA = "X-Request-Id";
-    public static final String CLAVE_MDC = "requestId";
+
+    public static final String HEADER = "X-Request-Id";
+    public static final String MDC_KEY = "requestId";
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain chain)
-            throws ServletException, IOException {
-        String id = UUID.randomUUID().toString().substring(0, 8);
-        MDC.put(CLAVE_MDC, id);
-        response.setHeader(CABECERA, id);
-        long inicio = System.currentTimeMillis();
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
+
+        String requestId = request.getHeader(HEADER);
+        if (requestId == null || requestId.isBlank()) {
+            requestId = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+        } else if (requestId.length() > 36) {
+            requestId = requestId.substring(0, 36);
+        }
+
+        MDC.put(MDC_KEY, requestId);
+        response.setHeader(HEADER, requestId);
         try {
-            chain.doFilter(request, response);
+            filterChain.doFilter(request, response);
         } finally {
-            if (!request.getRequestURI().startsWith("/actuator")) {
-                log.info("{} {} -> {} ({} ms)", request.getMethod(),
-                        request.getRequestURI(), response.getStatus(),
-                        System.currentTimeMillis() - inicio);
-            }
-            MDC.remove(CLAVE_MDC);
+            MDC.remove(MDC_KEY);
         }
     }
 }
