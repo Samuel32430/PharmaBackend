@@ -1,6 +1,7 @@
 package pe.edu.upeu.PharmaBackend.controller;
 
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +29,12 @@ public class ClienteController {
         return ResponseEntity.ok(
                 clienteService.listarPaginado(pagina, tamanio, ordenarPor, direccion)
         );
+    }
+
+    @GetMapping("/activos")
+    public ResponseEntity<List<ClienteResponseDTO>> buscarActivos(
+            @RequestParam(required = false) String q) {
+        return ResponseEntity.ok(clienteService.buscarActivos(q));
     }
 
     @GetMapping("/{id}")

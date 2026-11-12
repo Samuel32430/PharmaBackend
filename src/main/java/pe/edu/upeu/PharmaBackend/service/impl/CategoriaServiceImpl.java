@@ -2,8 +2,6 @@ package pe.edu.upeu.PharmaBackend.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pe.edu.upeu.PharmaBackend.dto.CategoriaRequestDTO;
@@ -27,7 +25,6 @@ public class CategoriaServiceImpl implements CategoriaService {
 
     @Override
     @Transactional
-    @CacheEvict(cacheNames = "categorias", allEntries = true)
     public CategoriaResponseDTO guardar(CategoriaRequestDTO t) {
         log.info("Iniciando registro de nueva categoría: {}", t.getNombre());
         String nombre = t.getNombre().trim();
@@ -51,7 +48,6 @@ public class CategoriaServiceImpl implements CategoriaService {
 
     @Override
     @Transactional
-    @CacheEvict(cacheNames = { "categorias", "productos" }, allEntries = true)
     public CategoriaResponseDTO actualizar(Long aLong, CategoriaRequestDTO t) {
         log.info("Iniciando actualización de la categoría con ID: {}", aLong);
         Categoria categoria = catergoriaRepository.findById(aLong).orElseThrow(() -> {
@@ -80,7 +76,6 @@ public class CategoriaServiceImpl implements CategoriaService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(cacheNames = "categorias", key = "'id-' + #aLong")
     public CategoriaResponseDTO buscarPorId(Long aLong) {
         log.info("Buscando categoría con ID: {}", aLong);
         Categoria categoria = catergoriaRepository.findById(aLong).orElseThrow(() -> {
@@ -92,7 +87,6 @@ public class CategoriaServiceImpl implements CategoriaService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(cacheNames = "categorias", key = "'todas'")
     public List<CategoriaResponseDTO> listar() {
         log.info("Listando todas las categorías");
         return catergoriaRepository.findAll()
@@ -103,7 +97,6 @@ public class CategoriaServiceImpl implements CategoriaService {
 
     @Override
     @Transactional
-    @CacheEvict(cacheNames = "categorias", allEntries = true)
     public void eliminar(Long aLong) {
         log.info("Iniciando eliminación de la categoría con ID: {}", aLong);
         Categoria categoria = catergoriaRepository.findById(aLong).orElseThrow(() -> {
@@ -127,7 +120,9 @@ public class CategoriaServiceImpl implements CategoriaService {
                 categoria.getDescripcion(),
                 categoria.getEstado(),
                 categoria.getFechaCreacion(),
-                categoria.getFechaModificacion()
+                categoria.getFechaModificacion(),
+                categoria.getCreadoPor(),
+                categoria.getModificadoPor()
         );
     }
 }

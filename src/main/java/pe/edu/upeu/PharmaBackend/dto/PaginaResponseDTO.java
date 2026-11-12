@@ -1,11 +1,10 @@
 package pe.edu.upeu.PharmaBackend.dto;
 
-import java.io.Serializable;
 import java.util.List;
+import java.util.function.Function;
+import org.springframework.data.domain.Page;
 
-public class PaginaResponseDTO<T> implements Serializable {
-    private static final long serialVersionUID = 1L;
-
+public class PaginaResponseDTO<T> {
     private List<T> contenido;
     private int pagina;
     private int tamanio;
@@ -13,15 +12,44 @@ public class PaginaResponseDTO<T> implements Serializable {
     private int totalPaginas;
     private boolean ultima;
 
-    public PaginaResponseDTO() {}
-
-    public PaginaResponseDTO(List<T> contenido, int pagina, int tamanio, long totalElementos, int totalPaginas, boolean ultima) {
+    public PaginaResponseDTO(
+            List<T> contenido,
+            int pagina,
+            int tamanio,
+            long totalElementos,
+            int totalPaginas,
+            boolean ultima) {
         this.contenido = contenido;
         this.pagina = pagina;
         this.tamanio = tamanio;
         this.totalElementos = totalElementos;
         this.totalPaginas = totalPaginas;
         this.ultima = ultima;
+    }
+
+    public static <T> PaginaResponseDTO<T> de(Page<T> page) {
+        return new PaginaResponseDTO<>(
+                page.getContent(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.isLast()
+        );
+    }
+
+    public <R> PaginaResponseDTO<R> map(Function<? super T, ? extends R> mapper) {
+        List<R> nuevoContenido = this.contenido.stream()
+                .<R>map(mapper)
+                .toList();
+        return new PaginaResponseDTO<>(
+                nuevoContenido,
+                this.pagina,
+                this.tamanio,
+                this.totalElementos,
+                this.totalPaginas,
+                this.ultima
+        );
     }
 
     public List<T> getContenido() { return contenido; }

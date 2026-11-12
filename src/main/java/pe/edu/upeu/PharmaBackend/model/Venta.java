@@ -5,6 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.BatchSize;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import pe.edu.upeu.PharmaBackend.enums.EstadoVenta;
 
 import java.math.BigDecimal;
@@ -14,6 +17,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "ventas")
+@EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -41,12 +45,17 @@ public class Venta {
     )
     private Cliente cliente;
 
+    @BatchSize(size = 20)
     @OneToMany(
             mappedBy = "venta",
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
     private List<DetalleVenta> detalles = new ArrayList<>();
+
+    @CreatedBy
+    @Column(name = "creado_por", length = 50, updatable = false)
+    private String creadoPor;
 
     @PrePersist
     public void prePersist() {

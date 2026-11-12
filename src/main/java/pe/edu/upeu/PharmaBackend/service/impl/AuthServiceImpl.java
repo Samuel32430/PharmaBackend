@@ -5,20 +5,27 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pe.edu.upeu.PharmaBackend.auditoria.EventoAuditoria;
+import pe.edu.upeu.PharmaBackend.dto.auth.CambioPasswordRequestDTO;
 import pe.edu.upeu.PharmaBackend.dto.auth.LoginRequestDTO;
 import pe.edu.upeu.PharmaBackend.dto.auth.LoginResponseDTO;
 import pe.edu.upeu.PharmaBackend.dto.auth.UsuarioResponseDTO;
 import pe.edu.upeu.PharmaBackend.entity.Usuario;
 import pe.edu.upeu.PharmaBackend.exception.RecursoNoEncontradoException;
+import pe.edu.upeu.PharmaBackend.exception.ReglaNegocioException;
 import pe.edu.upeu.PharmaBackend.mapper.UsuarioMapper;
 import pe.edu.upeu.PharmaBackend.repository.UsuarioRepository;
 import pe.edu.upeu.PharmaBackend.security.JwtService;
 import pe.edu.upeu.PharmaBackend.security.PermisosPorRol;
+import pe.edu.upeu.PharmaBackend.service.service.AuditoriaService;
 import pe.edu.upeu.PharmaBackend.service.service.AuthService;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @Service
@@ -31,41 +38,48 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final UsuarioRepository usuarioRepository;
     private final UsuarioMapper usuarioMapper;
+    private final PasswordEncoder passwordEncoder;
+    private final AuditoriaService auditoriaService;
 
     public AuthServiceImpl(
             AuthenticationManager authenticationManager,
             JwtService jwtService,
             UsuarioRepository usuarioRepository,
-            UsuarioMapper usuarioMapper) {
+            UsuarioMapper usuarioMapper,
+            PasswordEncoder passwordEncoder,
+            AuditoriaService auditoriaService) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.usuarioRepository = usuarioRepository;
         this.usuarioMapper = usuarioMapper;
+        this.passwordEncoder = passwordEncoder;
+        this.auditoriaService = auditoriaService;
     }
 
-    /*
-     * 1. AuthenticationManager busca al usuario (UsuarioDetailsService),
-     *    verifica que este habilitado y compara la contrasena con el hash
-     *    usando BCrypt. Si algo falla lanza una AuthenticationException,
-     *    que GlobalExceptionHandler convierte en 401.
-     * 2. Si todo es correcto, se emite el JWT.
-     *
-     * La contrasena NUNCA se escribe en el log.
-     */
     @Override
     @Transactional(readOnly = true)
     public LoginResponseDTO login(LoginRequestDTO request) {
         String username = request.getUsername().trim();
         log.info("Intento de inicio de sesión: usuario={}", username);
 
-        Authentication autenticacion = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(username, request.getPassword()));
+        Authentication autenticacion;
+        try {
+            autenticacion = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(username, request.getPassword()));
+        } catch (AuthenticationException ex) {
+            auditoriaService.registrar(
+                    EventoAuditoria.login("LOGIN_FALLIDO", username));
+            throw ex;
+        }
 
         UserDetails principal = (UserDetails) autenticacion.getPrincipal();
         Usuario usuario = buscar(principal.getUsername());
 
         String token = jwtService.generarToken(principal);
         List<String> roles = usuarioMapper.nombresRoles(usuario.getRoles());
+
+        auditoriaService.registrar(
+                EventoAuditoria.login("LOGIN_EXITOSO", usuario.getUsername()));
 
         log.info("Inicio de sesión correcto: usuario={} roles={}",
                 usuario.getUsername(), roles);
@@ -85,6 +99,30 @@ public class AuthServiceImpl implements AuthService {
     @Transactional(readOnly = true)
     public UsuarioResponseDTO usuarioActual(String username) {
         return usuarioMapper.toUsuarioResponse(buscar(username));
+    }
+
+    @Override
+    @Transactional
+    public void cambiarPassword(String username, CambioPasswordRequestDTO request) {
+        Usuario usuario = buscar(username);
+
+        if (!passwordEncoder.matches(request.getPasswordActual(), usuario.getPassword())) {
+            throw new ReglaNegocioException("La contraseña actual no es correcta");
+        }
+
+        if (request.getPasswordActual().equals(request.getPasswordNueva())
+                || passwordEncoder.matches(request.getPasswordNueva(), usuario.getPassword())) {
+            throw new ReglaNegocioException("La nueva contraseña debe ser distinta de la actual");
+        }
+
+        if (request.getPasswordNueva().getBytes(StandardCharsets.UTF_8).length > 72) {
+            throw new ReglaNegocioException("La contraseña no puede superar 72 bytes");
+        }
+
+        usuario.setPassword(passwordEncoder.encode(request.getPasswordNueva()));
+        usuarioRepository.save(usuario);
+
+        log.info("Cambio de contraseña exitoso para el usuario={}", usuario.getUsername());
     }
 
     private Usuario buscar(String username) {
