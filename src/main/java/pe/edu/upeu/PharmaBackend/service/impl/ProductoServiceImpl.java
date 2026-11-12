@@ -4,12 +4,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pe.edu.upeu.PharmaBackend.auditoria.EventoAuditoria;
 import pe.edu.upeu.PharmaBackend.dto.PaginaResponseDTO;
 import pe.edu.upeu.PharmaBackend.dto.ProductoRequestDTO;
 import pe.edu.upeu.PharmaBackend.dto.ProductoResponseDTO;
@@ -20,19 +22,26 @@ import pe.edu.upeu.PharmaBackend.model.Producto;
 import pe.edu.upeu.PharmaBackend.repository.CatergoriaRepository;
 import pe.edu.upeu.PharmaBackend.repository.ProductoRepository;
 import pe.edu.upeu.PharmaBackend.service.service.ProductoService;
+import pe.edu.upeu.PharmaBackend.util.PaginacionUtil;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @RequiredArgsConstructor
 @Service
 public class ProductoServiceImpl implements ProductoService {
+
+    private static final Set<String> CAMPOS_ORDENABLES = Set.of("id", "nombre", "precio", "stock");
+
     private final ProductoRepository productoRepository;
     private final CatergoriaRepository catergoriaRepository;
+    private final ApplicationEventPublisher eventos;
 
     @Override
     @Transactional
-    @CacheEvict(cacheNames = "productos", allEntries = true)
+    @CacheEvict(value = "productos", allEntries = true)
     public ProductoResponseDTO guardar(ProductoRequestDTO t) {
         log.info("Iniciando registro de nuevo producto: {}", t.getNombre());
         String nombre = t.getNombre().trim();
@@ -64,7 +73,7 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     @Transactional
-    @CacheEvict(cacheNames = "productos", allEntries = true)
+    @CacheEvict(value = "productos", allEntries = true)
     public ProductoResponseDTO actualizar(Long aLong, ProductoRequestDTO t) {
         log.info("Iniciando actualización del producto con ID: {}", aLong);
         Producto producto = productoRepository.findById(aLong).orElseThrow(() -> {
@@ -87,6 +96,8 @@ public class ProductoServiceImpl implements ProductoService {
             return new RecursoNoEncontradoException("La categoria no se encontró");
         });
 
+        BigDecimal precioAnterior = producto.getPrecio();
+
         producto.setNombre(nombre);
         producto.setPrecio(t.getPrecio());
         producto.setStock(t.getStock());
@@ -94,13 +105,20 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setCategoria(categoria);
 
         Producto prodActualizado = productoRepository.save(producto);
+        if (precioAnterior.compareTo(prodActualizado.getPrecio()) != 0) {
+            eventos.publishEvent(EventoAuditoria.de(
+                    "PRECIO_MODIFICADO",
+                    "Producto",
+                    prodActualizado.getId(),
+                    precioAnterior + " -> " + prodActualizado.getPrecio()));
+        }
+
         log.info("Producto con ID {} actualizado exitosamente", aLong);
         return convertirResponse(prodActualizado);
     }
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(cacheNames = "productos", key = "'id-' + #aLong")
     public ProductoResponseDTO buscarPorId(Long aLong) {
         log.info("Buscando producto con ID: {}", aLong);
         Producto producto = productoRepository.findById(aLong).orElseThrow(() -> {
@@ -122,7 +140,7 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     @Transactional
-    @CacheEvict(cacheNames = "productos", allEntries = true)
+    @CacheEvict(value = "productos", allEntries = true)
     public void eliminar(Long aLong) {
         log.info("Iniciando eliminación de producto con ID: {}", aLong);
         Producto producto = productoRepository.findById(aLong).orElseThrow(() -> {
@@ -130,46 +148,46 @@ public class ProductoServiceImpl implements ProductoService {
             return new RecursoNoEncontradoException("Producto no encontrado con id: " + aLong);
         });
         productoRepository.delete(producto);
+        eventos.publishEvent(EventoAuditoria.de(
+                "PRODUCTO_ELIMINADO",
+                "Producto",
+                producto.getId(),
+                producto.getNombre()));
         log.info("Producto con ID {} eliminado exitosamente", aLong);
     }
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(cacheNames = "productos",
+    @Cacheable(
+            value = "productos",
             key = "#pagina + '-' + #tamanio + '-' + #ordenarPor + '-' + #direccion")
-    public PaginaResponseDTO<ProductoResponseDTO> listarPaginado(int pagina, int tamanio, String ordenarPor, String direccion) {
+    public PaginaResponseDTO<ProductoResponseDTO> listarPaginado(
+            int pagina, int tamanio, String ordenarPor, String direccion) {
         log.info("Listando productos paginado: pagina={}, tamanio={}, ordenarPor={}, direccion={}",
                 pagina, tamanio, ordenarPor, direccion);
 
-        List<String> permitidos = List.of("id", "nombre", "precio", "stock");
-        String campoOrden = (ordenarPor != null && !ordenarPor.isBlank()) ? ordenarPor.trim().toLowerCase() : "nombre";
-
-        if (!permitidos.contains(campoOrden)) {
-            throw new ReglaNegocioException("El campo de ordenación no es válido: " + ordenarPor);
-        }
-
-        Sort.Direction dir = "desc".equalsIgnoreCase(direccion) ? Sort.Direction.DESC : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(Math.max(pagina, 0), Math.max(tamanio, 1), Sort.by(dir, campoOrden));
+        Pageable pageable = PaginacionUtil.construir(
+                pagina, tamanio, ordenarPor, direccion, CAMPOS_ORDENABLES, "nombre");
         Page<Producto> page = productoRepository.findAll(pageable);
 
-        List<ProductoResponseDTO> contenido = page.getContent()
+        return PaginaResponseDTO.de(page.map(this::convertirResponse));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProductoResponseDTO> buscarDisponibles(String q) {
+        String filtro = (q == null || q.isBlank()) ? null : q.trim();
+        Pageable limite = PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "nombre"));
+        return productoRepository.buscarDisponibles(filtro, limite)
+                .getContent()
                 .stream()
                 .map(this::convertirResponse)
                 .toList();
-
-        return new PaginaResponseDTO<>(
-                contenido,
-                page.getNumber(),
-                page.getSize(),
-                page.getTotalElements(),
-                page.getTotalPages(),
-                page.isLast()
-        );
     }
 
     @Override
     @Transactional
-    @CacheEvict(cacheNames = "productos", allEntries = true)
+    @CacheEvict(value = "productos", allEntries = true)
     public void darDeBaja(Long id) {
         log.info("Dando de baja lógica al producto id={}", id);
         Producto producto = productoRepository.findById(id)
@@ -181,6 +199,11 @@ public class ProductoServiceImpl implements ProductoService {
 
         producto.setEstado(false);
         productoRepository.save(producto);
+        eventos.publishEvent(EventoAuditoria.de(
+                "PRODUCTO_ELIMINADO",
+                "Producto",
+                producto.getId(),
+                producto.getNombre()));
         log.info("Producto id={} dado de baja exitosamente", id);
     }
 
@@ -194,7 +217,9 @@ public class ProductoServiceImpl implements ProductoService {
                 producto.getFechaCreacion(),
                 producto.getFechaModificacion(),
                 producto.getCategoria().getId(),
-                producto.getCategoria().getNombre()
+                producto.getCategoria().getNombre(),
+                producto.getCreadoPor(),
+                producto.getModificadoPor()
         );
     }
 }

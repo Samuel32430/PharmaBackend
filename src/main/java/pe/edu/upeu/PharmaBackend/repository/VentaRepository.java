@@ -1,6 +1,7 @@
 package pe.edu.upeu.PharmaBackend.repository;
 
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -9,30 +10,34 @@ import pe.edu.upeu.PharmaBackend.dto.reporte.VentaPorCategoriaDTO;
 import pe.edu.upeu.PharmaBackend.enums.EstadoVenta;
 import pe.edu.upeu.PharmaBackend.model.Venta;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
 public interface VentaRepository extends JpaRepository<Venta, Long> {
-    @Query(
-            """
-                SELECT distinct v FROM Venta v
-            LEFT JOIN FETCH v.cliente c
-            LEFT JOIN FETCH v.detalles d
-            LEFT JOIN FETCH d.producto p
-            WHERE (:clienteId is null or c.id = :clienteId)
-            and(:estado is null or v.estado = :estado)
-            and(:desde is null or v.fecha >= : desde)
-            and(:hasta is null or v.fecha <= : hasta)
-            """
-    )
-    List<Venta> buscar(@Param("clienteId") Long clienteId,
-                       @Param("estado")EstadoVenta estado,
-                       @Param("desde")LocalDateTime desde,
-                       @Param("hasta") LocalDateTime hasta,
-                       Sort sort
-                       );
 
+    @Query(
+            value = """
+                    SELECT v FROM Venta v
+                    JOIN FETCH v.cliente c
+                    WHERE (:clienteId is null or c.id = :clienteId)
+                      and (:estado is null or v.estado = :estado)
+                      and (:desde is null or v.fecha >= :desde)
+                      and (:hasta is null or v.fecha <= :hasta)
+                    """,
+            countQuery = """
+                    SELECT count(v) FROM Venta v
+                    WHERE (:clienteId is null or v.cliente.id = :clienteId)
+                      and (:estado is null or v.estado = :estado)
+                      and (:desde is null or v.fecha >= :desde)
+                      and (:hasta is null or v.fecha <= :hasta)
+                    """
+    )
+    Page<Venta> buscar(
+            @Param("clienteId") Long clienteId,
+            @Param("estado") EstadoVenta estado,
+            @Param("desde") LocalDateTime desde,
+            @Param("hasta") LocalDateTime hasta,
+            Pageable pageable);
 
     @Query("""
             select new pe.edu.upeu.PharmaBackend.dto.reporte.VentaPorCategoriaDTO(
@@ -54,7 +59,6 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
             @Param("desde") LocalDateTime desde,
             @Param("hasta") LocalDateTime hasta);
 
-
     @Query("""
             select new pe.edu.upeu.PharmaBackend.dto.reporte.ProductoMasVendidoDTO(
                        p.id,
@@ -75,7 +79,4 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
     List<ProductoMasVendidoDTO> reporteProductosMasVendidos(
             @Param("desde") LocalDateTime desde,
             @Param("hasta") LocalDateTime hasta);
-
-
-
 }
